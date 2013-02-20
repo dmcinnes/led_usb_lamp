@@ -28,9 +28,8 @@
 unsigned char DigisparkPWMcompare[3];
 volatile unsigned char DigisparkPWMcompbuff[3];
 
-uint8_t color[]     = {255, 255, 255};
-uint8_t nextColor[] = {0, 0, 0};
-uint8_t sample;
+unsigned char color[]     = {255, 255, 255};
+unsigned char nextColor[] = {0, 0, 0};
 uint8_t i, j;
 unsigned long currentMillis = 0;
 unsigned long lastMillis    = 0;
@@ -144,6 +143,15 @@ void shiftColors() {
 void chooseNextColor() {
   for (i = 0; i < 3; i++) {
     nextColor[i] = random(255);
+    if (nextColor[i] < 50) {
+      nextColor[i] = 0;
+    }
+  }
+
+  if (nextColor[0] == 0 &&
+      nextColor[1] == 0 &&
+      nextColor[2] == 0) {
+    chooseNextColor(); // try again
   }
 }
 
@@ -206,8 +214,8 @@ void DigisparkRGBBegin() {
   sei();
 }
 
-void DigisparkRGB(int pin,int value){
-	DigisparkPWMcompbuff[pin] = value;
+void DigisparkRGB(int pin, int value) {
+  DigisparkPWMcompbuff[pin] = value;
 }
 
 void DigisparkRGBDelay(int ms) {
@@ -223,7 +231,7 @@ void DigisparkRGBUpdate() {
 
   PORTB = pinlevelB;            // update outputs
 
-  if(++softcount == 0){         // increment modulo 256 counter and update
+  if (++softcount == 0) {       // increment modulo 256 counter and update
                                 // the compare values only when counter = 0.
     DigisparkPWMcompare[0] = DigisparkPWMcompbuff[0]; // verbose code for speed
     DigisparkPWMcompare[1] = DigisparkPWMcompbuff[1]; // verbose code for speed
@@ -232,7 +240,7 @@ void DigisparkRGBUpdate() {
     pinlevelB = PORTB_MASK;     // set all port pins high
   }
   // clear port pin on compare match (executed on next interrupt)
-  if(DigisparkPWMcompare[0] == softcount) RED_CLEAR;
-  if(DigisparkPWMcompare[1] == softcount) GREEN_CLEAR;
-  if(DigisparkPWMcompare[2] == softcount) BLUE_CLEAR;
+  if (DigisparkPWMcompare[0] == softcount) RED_CLEAR;
+  if (DigisparkPWMcompare[1] == softcount) GREEN_CLEAR;
+  if (DigisparkPWMcompare[2] == softcount) BLUE_CLEAR;
 }
