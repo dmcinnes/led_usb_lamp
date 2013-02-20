@@ -1,10 +1,13 @@
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>     /* for _delay_ms() */
-#include <usbdrv.h>
-
 #include <avr/io.h>
+#include <util/delay.h>     /* for _delay_ms() */
+#include "usbdrv.h"
 
+#define LOW    0 
+#define HIGH   1 
+#define OUTPUT 1 
+#define INPUT  0 
 
 #define set(x) |= (1<<x)
 #define clr(x) &=~(1<<x)
@@ -121,7 +124,7 @@ void loop () {
   }
 }
 
-bool match() {
+short match() {
   return color[0] == nextColor[0] &&
          color[1] == nextColor[1] &&
          color[2] == nextColor[2];
@@ -137,8 +140,8 @@ void shiftColors() {
   }
 
   DigisparkRGB(0, color[0]);
-  DigisparkRGB(1, color[1]);
-  DigisparkRGB(2, color[2]);
+  /* DigisparkRGB(1, color[1]); */
+  /* DigisparkRGB(2, color[2]); */
 }
 
 void chooseNextColor() {
@@ -184,9 +187,11 @@ void shuttingDown() {
 
 void DigisparkRGBBegin() {
 
-  pinMode(2, OUTPUT);
-  pinMode(1, OUTPUT);
-  pinMode(0, OUTPUT);
+  DDRB |= 1<<DDB2 | 1<<DDB1 | 1<<DDB0;
+  /* pinMode(2, OUTPUT); */
+  /* pinMode(1, OUTPUT); */
+  /* pinMode(0, OUTPUT); */
+
   //CLKPR = (1 << CLKPCE);        // enable clock prescaler update
   //CLKPR = 0;                    // set clock to maximum (= crystal)
 
