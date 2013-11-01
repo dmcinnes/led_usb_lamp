@@ -8,7 +8,7 @@
 
 // in milliseconds
 // time between 1/255 color changes
-#define SHIFT_TIMEOUT      10
+#define SHIFT_TIMEOUT      25
 // time it holds a chosen color
 #define HOLD_COLOR_TIMEOUT 2000
 
@@ -96,10 +96,10 @@ void chooseNextColor() {
 // *** STATES ***
 
 void cycleToNextColor() {
+  shiftColors();
+
   if (match()) {
     state = STATE_HOLD;
-  } else {
-    shiftColors();
   }
 }
 
