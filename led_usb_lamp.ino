@@ -17,12 +17,15 @@ uint8_t state = STATE_CYCLE;
 unsigned char color[]     = {255, 255, 255};
 unsigned char nextColor[] = {0, 0, 0};
 
-unsigned int counter         = 1;
-unsigned int previousCounter = 0;
+unsigned int counter;
+unsigned int previousCounter;
 
 
 // the setup routine runs once when you press reset:
 void setup() {
+  counter         = 1;
+  previousCounter = 0;
+
   DigisparkRGBBegin();
 
   // Enable interrupts only on pins 3 and 4
@@ -37,8 +40,6 @@ void setup() {
 }
 
 void loop () {
-  checkSleep();
-
   switch (state) {
     case STATE_CYCLE:
       cycleToNextColor();
@@ -48,6 +49,9 @@ void loop () {
       break;
     case STATE_BEDTIME:
       shuttingDown();
+      break;
+    case STATE_SLEEP:
+      checkForWake();
       break;
   }
 }
@@ -107,6 +111,8 @@ void holdColor() {
   DigisparkRGBDelay(HOLD_COLOR_TIMEOUT);
   chooseNextColor();
   state = STATE_CYCLE;
+
+  checkSleep();
 }
 
 void shuttingDown() {
@@ -126,14 +132,32 @@ void checkSleep() {
     nextColor[0] = 0;
     nextColor[1] = 0;
     nextColor[2] = 0;
-
-  } else if (state == STATE_SLEEP) {
-    // We're asleep and counter is now updating, wake up
-    state = STATE_CYCLE;
-    chooseNextColor();
   }
 
   previousCounter = counter;
+}
+
+void checkForWake() {
+  if (counter != previousCounter) {
+    // We're asleep and counter is now updating, wake up
+    chooseNextColor();
+    state = STATE_CYCLE;
+
+    // wait 5 seconds for things to mellow out
+    DigisparkRGBDelay(5000);
+
+    // --- Reboot the Digispark so it can get in a good state again
+    reboot();
+  }
+}
+
+void reboot(void) {
+  noInterrupts(); // disable interrupts which could mess with changing prescaler
+  CLKPR = 0b10000000; // enable prescaler speed change
+  CLKPR = 0; // set prescaler to default (16mhz) mode required by bootloader
+  void (*ptrToFunction)(); // allocate a function pointer
+  ptrToFunction = 0x0000; // set function pointer to bootloader reset vector
+  (*ptrToFunction)(); // jump to reset, which bounces in to bootloader
 }
 
 // called when data appears on the USB pins
